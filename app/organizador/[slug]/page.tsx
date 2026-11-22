@@ -1,9 +1,9 @@
-import { ArrowLeft, ChevronLeft, ChevronRight, Download, Pencil, Users } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, Pencil, UserCheck, UserPlus, Users } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/app/components/site-header';
 import { invitationSchedule } from '@/lib/invitation';
-import { requireOrganizer } from '@/lib/organizer';
+import { requireOrganizer, rsvpTotals } from '@/lib/organizer';
 import { uuidPattern } from '@/lib/public-invitation';
 import { deleteEvent } from '../actions';
 import { DeleteEventForm, LogoutForm } from '../forms';
@@ -28,7 +28,13 @@ export default async function EventPage({ params, searchParams }: PageProps<'/or
     .select('request_id, guest_name, companions', { count: 'exact' }).eq('event_slug', slug)
     .order('created_at', { ascending: false }).order('request_id', { ascending: false })
     .range(start, start + pageSize - 1);
-  const pageCount = Math.ceil((count ?? 0) / pageSize);
+  const totals = await rsvpTotals(supabase, slug);
+  const stats = totals && [
+    { label: 'Presenças confirmadas', hint: 'convidados + acompanhantes', value: totals.guests + totals.companions, Icon: UserCheck },
+    { label: 'Convidados', hint: 'quem respondeu o convite', value: totals.guests, Icon: Users },
+    { label: 'Acompanhantes', hint: 'trazidos pelos convidados', value: totals.companions, Icon: UserPlus },
+  ];
+  const pageCount =Math.ceil((count ?? 0) / pageSize);
   const pageHref = (page: number) => `/organizador/${slug}${page > 1 ? `?pagina=${page}` : ''}`;
   const details = [invitationSchedule(event), event.location].filter(Boolean).join(' · ');
 
@@ -39,6 +45,12 @@ export default async function EventPage({ params, searchParams }: PageProps<'/or
         <Link className="back-link" href="/organizador"><ArrowLeft size={16} aria-hidden="true" /> Seus eventos</Link>
         <h1>{event.title}</h1>
         {details && <p className="event-details">{details}</p>}
+        {stats && <section className="stats-grid" aria-label="Resumo das presenças">
+          {stats.map(({ label, hint, value, Icon }) => <div className="surface stat-card" key={label}>
+            <span className="event-icon"><Icon size={21} aria-hidden="true" /></span>
+            <div><strong>{value}</strong><span>{label}</span><small>{hint}</small></div>
+          </div>)}
+        </section>}
         <ShareInvitation href={`/convite/${slug}`} />
         <section className="event-actions" aria-label="Gerenciar evento">
           <Link className="button button-secondary" href={`/organizador/${slug}/editar`}><Pencil size={16} aria-hidden="true" /> Editar evento</Link>
