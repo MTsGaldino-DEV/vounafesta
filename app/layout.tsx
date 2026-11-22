@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '@fontsource-variable/dm-sans';
 import '@fontsource-variable/playfair-display';
 import '@fontsource-variable/playfair-display/wght-italic.css';
+import '@fontsource/allura';
 import './globals.css';
 
 export const metadata: Metadata = {

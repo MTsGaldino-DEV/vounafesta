@@ -6,10 +6,10 @@ export type Invitation = {
 };
 
 export const demoInvitation: Invitation = {
-  title: 'Uma noite para celebrar',
-  event_date: '2026-12-12',
-  event_time: '19:30',
-  location: 'Terraço Aurora · São Paulo, SP',
+  title: 'Maressa',
+  event_date: '2026-12-20',
+  event_time: '12:30',
+  location: 'Rua das Ondas, 100 · Bairro Maré',
 };
 
 export const demoSlug = 'exemplo';
@@ -19,6 +19,24 @@ export const maxNameLength = 100;
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
 });
+
+const partFormatters = {
+  day: new Intl.DateTimeFormat('pt-BR', { day: 'numeric', timeZone: 'UTC' }),
+  month: new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'UTC' }),
+  weekday: new Intl.DateTimeFormat('pt-BR', { weekday: 'long', timeZone: 'UTC' }),
+};
+
+// Pieces of the schedule for the themed invitation: "20", "dezembro", "Domingo", "12:30h".
+export function invitationParts({ event_date, event_time }: Invitation) {
+  const date = event_date ? new Date(`${event_date}T00:00:00Z`) : null;
+  const weekday = date && partFormatters.weekday.format(date);
+  return {
+    day: date && partFormatters.day.format(date),
+    month: date && partFormatters.month.format(date),
+    weekday: weekday && weekday[0].toUpperCase() + weekday.slice(1),
+    time: event_time && `${event_time.slice(0, 5)}h`,
+  };
+}
 
 export function invitationSchedule({ event_date, event_time }: Invitation) {
   const date = event_date && dateFormatter.format(new Date(`${event_date}T00:00:00Z`));

@@ -6,3 +6,6 @@ node_modules/
 next-env.d.ts
 *.tsbuildinfo
 supabase/.temp/
+
+# Arte original do convite (a versao usada no site fica em public/tema)
+Convite da Maressa*
