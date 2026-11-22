@@ -108,7 +108,7 @@ export function EventForm({ action, initial, coverSrc, label, pendingLabel, icon
       </div>
       <label className="field">Cor dos destaques
         <input name="accent_color" type="color" value={color} onChange={(event) => setColor(event.target.value)} />
-        <small className="field-hint">Cor do título, dos botões e dos detalhes do convite. O texto dos botões é branco, prefira uma cor escura ou média.</small>
+        <small className="field-hint">Cor dos botões e dos detalhes do convite. O texto dos botões é branco, prefira uma cor escura ou média.</small>
       </label>
       {state.error && <p className="form-error" role="alert">{state.error}</p>}
       <button className="button button-primary" disabled={pending}>{icon} {pending ? pendingLabel : label}</button>
@@ -130,6 +130,22 @@ export function DeleteEventForm({ action }: { action: (state: FormState) => Prom
               <button className="button button-danger" disabled={pending}><Trash2 size={17} aria-hidden="true" /> {pending ? 'Excluindo…' : 'Excluir de vez'}</button>
             </div>
           </>}
+      {state.error && <p className="form-error" role="alert">{state.error}</p>}
+    </form>
+  );
+}
+
+export function DeleteRsvpForm({ action, name }: { action: (state: FormState) => Promise<FormState>; name: string }) {
+  const [state, submit, pending] = useActionState(action, {});
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return <button className="button button-icon rsvp-delete" type="button" aria-label={`Excluir a confirmação de ${name}`} onClick={() => setConfirming(true)}><Trash2 size={16} aria-hidden="true" /></button>;
+  }
+  return (
+    <form action={submit} className="rsvp-delete">
+      <span>Excluir?</span>
+      <button className="button button-danger" disabled={pending}>{pending ? 'Excluindo…' : 'Sim'}</button>
+      <button className="button button-secondary" type="button" onClick={() => setConfirming(false)} disabled={pending}>Não</button>
       {state.error && <p className="form-error" role="alert">{state.error}</p>}
     </form>
   );

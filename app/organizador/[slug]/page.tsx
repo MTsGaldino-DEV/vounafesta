@@ -5,8 +5,8 @@ import { SiteHeader } from '@/app/components/site-header';
 import { invitationSchedule } from '@/lib/invitation';
 import { requireOrganizer, rsvpTotals } from '@/lib/organizer';
 import { uuidPattern } from '@/lib/public-invitation';
-import { deleteEvent } from '../actions';
-import { DeleteEventForm, LogoutForm } from '../forms';
+import { deleteEvent, deleteRsvp } from '../actions';
+import { DeleteEventForm, DeleteRsvpForm, LogoutForm } from '../forms';
 import { ShareInvitation } from './share-invitation';
 
 export const metadata = { title: 'Lista de presenças', robots: { index: false, follow: false } };
@@ -66,6 +66,7 @@ export default async function EventPage({ params, searchParams }: PageProps<'/or
               {replies.map((reply) => <li key={reply.request_id}>
                 <span className="event-icon"><Users size={17} aria-hidden="true" /></span>
                 <div><strong>{reply.guest_name}</strong>{reply.companions.length > 0 && <p>Com {reply.companions.join(', ')}</p>}</div>
+                <DeleteRsvpForm action={deleteRsvp.bind(null, slug, reply.request_id)} name={reply.guest_name} />
               </li>)}
             </ul>
           )}

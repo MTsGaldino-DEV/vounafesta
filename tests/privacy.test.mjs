@@ -21,6 +21,7 @@ test('guests can RSVP once per submission and only the event owner can read the 
     await db.exec(await readFile(migration, 'utf8'));
     await db.exec(await readFile(new URL('../supabase/migrations/20261122000001_manage_events.sql', import.meta.url), 'utf8'));
     await db.exec(await readFile(new URL('../supabase/migrations/20261122000002_event_theme.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20261122000004_delete_rsvps.sql', import.meta.url), 'utf8'));
 
     await db.exec(`set role authenticated; set test.user_id = '00000000-0000-0000-0000-000000000001';`);
     const { rows: [event] } = await db.query("insert into public.events (title) values ('Minha festa') returning slug");
@@ -57,6 +58,10 @@ test('guests can RSVP once per submission and only the event owner can read the 
     await assert.rejects(db.query("update public.events set owner_id = '00000000-0000-0000-0000-000000000002' where slug = $1", [event.slug]), { code: '42501' });
     assert.equal((await db.query("update public.events set title = 'Nova festa', location = 'Casa' where slug = $1", [event.slug])).affectedRows, 1);
     assert.equal((await db.query('select title from public.events')).rows[0].title, 'Nova festa');
+    await db.exec(`set test.user_id = '00000000-0000-0000-0000-000000000002';`);
+    assert.equal((await db.query('delete from public.rsvps')).affectedRows, 0);
+    await db.exec(`set test.user_id = '00000000-0000-0000-0000-000000000001';`);
+    assert.equal((await db.query('delete from public.rsvps')).affectedRows, 1);
     assert.equal((await db.query('delete from public.events where slug = $1', [event.slug])).affectedRows, 1);
     assert.deepEqual((await db.query('select * from public.rsvps')).rows, []);
   } finally {

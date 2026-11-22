@@ -20,9 +20,9 @@ export function InvitationScreen({ invitation, demo = false, children }: {
     '--accent-soft': `color-mix(in srgb, ${accent} 12%, white)`,
   } as React.CSSProperties : undefined;
   return (
-    <>
+    <div className="invite-page" style={theme}>
       <SiteHeader />
-      <main className="invite-layout" style={theme}>
+      <main className="invite-layout">
         <section className="invite-cover" aria-label="Sobre o evento">
           {invitation.cover_path
             ? <img className="cover-custom" src={coverUrl(invitation.cover_path)} alt="" />
@@ -44,7 +44,7 @@ export function InvitationScreen({ invitation, demo = false, children }: {
         </section>
         <section className="invite-panel">{children}</section>
       </main>
-    </>
+    </div>
   );
 }
 

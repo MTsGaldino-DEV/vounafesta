@@ -125,6 +125,15 @@ export async function deleteEvent(slug: string, _state: FormState): Promise<Form
   redirect('/organizador');
 }
 
+export async function deleteRsvp(slug: string, requestId: string, _state: FormState): Promise<FormState> {
+  const supabase = await requireOrganizer();
+  if (!uuidPattern.test(slug) || !uuidPattern.test(requestId)) return { error: 'Confirmação não encontrada.' };
+  const { error } = await supabase.from('rsvps').delete().eq('event_slug', slug).eq('request_id', requestId);
+  if (error) return { error: 'Não foi possível excluir. Tente novamente.' };
+  revalidatePath(`/organizador/${slug}`);
+  return { success: true };
+}
+
 export async function requestPasswordReset(_state: FormState, data: FormData): Promise<FormState> {
   const email = textValue(data, 'email');
   if (!email) return { error: 'Informe seu e-mail.' };
