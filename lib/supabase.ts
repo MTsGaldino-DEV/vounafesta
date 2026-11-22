@@ -8,6 +8,12 @@ export function supabaseConfig() {
   return url && key ? { url, key } : null;
 }
 
+export const coverBucket = 'event-covers';
+
+export function coverUrl(path: string) {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${coverBucket}/${path}`;
+}
+
 export function guestClient() {
   const config = supabaseConfig();
   return config && createClient(config.url, config.key, {

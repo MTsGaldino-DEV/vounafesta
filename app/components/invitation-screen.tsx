@@ -2,7 +2,8 @@ import { ArrowRight, CalendarDays, LockKeyhole, MapPin, Sparkles } from 'lucide-
 import Image from 'next/image';
 import Link from 'next/link';
 import { invitationSchedule, type Invitation } from '@/lib/invitation';
-import cover from '@/public/tema/moana.webp';
+import { coverUrl } from '@/lib/supabase';
+import defaultCover from '@/public/tema/moana.webp';
 import { SiteHeader } from './site-header';
 
 export function InvitationScreen({ invitation, demo = false, children }: {
@@ -11,12 +12,21 @@ export function InvitationScreen({ invitation, demo = false, children }: {
   children: React.ReactNode;
 }) {
   const schedule = invitationSchedule(invitation);
+  const accent = invitation.accent_color;
+  // accent_color is validated as #rrggbb by the database; the other shades derive from it.
+  const theme = accent ? {
+    '--accent': accent,
+    '--accent-dark': `color-mix(in srgb, ${accent} 75%, black)`,
+    '--accent-soft': `color-mix(in srgb, ${accent} 12%, white)`,
+  } as React.CSSProperties : undefined;
   return (
     <>
       <SiteHeader />
-      <main className="invite-layout">
+      <main className="invite-layout" style={theme}>
         <section className="invite-cover" aria-label="Sobre o evento">
-          <Image src={cover} alt="" fill preload sizes="(max-width: 760px) 100vw, 50vw" />
+          {invitation.cover_path
+            ? <img className="cover-custom" src={coverUrl(invitation.cover_path)} alt="" />
+            : <Image src={defaultCover} alt="" fill preload sizes="(max-width: 760px) 100vw, 50vw" />}
           <div className="cover-content">
             <div className="cover-title">
               <p className="eyebrow"><span className="eyebrow-line" /> Você está convidado</p>

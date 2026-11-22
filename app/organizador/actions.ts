@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { requireOrganizer } from '@/lib/organizer';
+import { defaultAccent } from '@/lib/invitation';
+import { removeCover, requireOrganizer, uploadCover } from '@/lib/organizer';
 import { uuidPattern } from '@/lib/public-invitation';
 import { organizerClient } from '@/lib/supabase';
 
@@ -42,10 +43,22 @@ function parseEvent(data: FormData) {
   const location = textValue(data, 'location');
   if (!title || title.length > 100) return { error: 'Digite um nome de evento de até 100 caracteres.' };
   if (location.length > 160) return { error: 'O local deve ter até 160 caracteres.' };
+  const color = textValue(data, 'accent_color').toLowerCase() || defaultAccent;
+  if (!/^#[0-9a-f]{6}$/.test(color)) return { error: 'Escolha uma cor válida.' };
   if ((eventDate && !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) || (eventTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(eventTime))) {
     return { error: 'Confira a data e o horário do evento.' };
   }
-  return { values: { title, event_date: eventDate || null, event_time: eventTime || null, location: location || null } };
+  return {
+    values: {
+      title, event_date: eventDate || null, event_time: eventTime || null, location: location || null,
+      accent_color: color === defaultAccent ? null : color,
+    },
+  };
+}
+
+function coverFile(data: FormData) {
+  const file = data.get('cover');
+  return file instanceof File && file.size > 0 ? file : null;
 }
 
 export async function createEvent(_state: FormState, data: FormData): Promise<FormState> {
@@ -53,7 +66,16 @@ export async function createEvent(_state: FormState, data: FormData): Promise<Fo
   const parsed = parseEvent(data);
   if (!parsed.values) return parsed;
 
-  const { data: event, error } = await supabase.from('events').insert(parsed.values).select('slug').single();
+  let coverPath: string | null = null;
+  const file = coverFile(data);
+  if (file) {
+    const upload = await uploadCover(supabase, file);
+    if ('error' in upload) return upload;
+    coverPath = upload.path;
+  }
+
+  const { data: event, error } = await supabase.from('events').insert({ ...parsed.values, cover_path: coverPath }).select('slug').single();
+  if (error) await removeCover(supabase, coverPath);
   if (error?.code === '22008') return { error: 'Confira a data e o horário do evento.' };
   if (error) return { error: 'Não foi possível criar o evento. Tente novamente.' };
   revalidatePath('/organizador');
@@ -66,10 +88,26 @@ export async function updateEvent(slug: string, _state: FormState, data: FormDat
   const parsed = parseEvent(data);
   if (!parsed.values) return parsed;
 
-  const { data: updated, error } = await supabase.from('events').update(parsed.values).eq('slug', slug).select('slug');
-  if (error?.code === '22008') return { error: 'Confira a data e o horário do evento.' };
-  if (error) return { error: 'Não foi possível salvar o evento. Tente novamente.' };
-  if (!updated?.length) return { error: 'Evento não encontrado.' };
+  const { data: current } = await supabase.from('events').select('cover_path').eq('slug', slug).maybeSingle();
+  if (!current) return { error: 'Evento não encontrado.' };
+
+  let coverPath: string | null = current.cover_path;
+  const file = coverFile(data);
+  if (file) {
+    const upload = await uploadCover(supabase, file);
+    if ('error' in upload) return upload;
+    coverPath = upload.path;
+  } else if (data.get('remove_cover')) {
+    coverPath = null;
+  }
+
+  const { data: updated, error } = await supabase.from('events').update({ ...parsed.values, cover_path: coverPath }).eq('slug', slug).select('slug');
+  if (error || !updated?.length) {
+    if (coverPath !== current.cover_path) await removeCover(supabase, coverPath);
+    if (error?.code === '22008') return { error: 'Confira a data e o horário do evento.' };
+    return { error: error ? 'Não foi possível salvar o evento. Tente novamente.' : 'Evento não encontrado.' };
+  }
+  if (coverPath !== current.cover_path) await removeCover(supabase, current.cover_path);
   revalidatePath('/organizador');
   revalidatePath(`/organizador/${slug}`);
   revalidatePath(`/convite/${slug}`);
@@ -79,9 +117,10 @@ export async function updateEvent(slug: string, _state: FormState, data: FormDat
 export async function deleteEvent(slug: string, _state: FormState): Promise<FormState> {
   const supabase = await requireOrganizer();
   if (!uuidPattern.test(slug)) return { error: 'Evento não encontrado.' };
-  const { data: deleted, error } = await supabase.from('events').delete().eq('slug', slug).select('slug');
+  const { data: deleted, error } = await supabase.from('events').delete().eq('slug', slug).select('cover_path');
   if (error) return { error: 'Não foi possível excluir o evento. Tente novamente.' };
   if (!deleted?.length) return { error: 'Evento não encontrado.' };
+  await removeCover(supabase, deleted[0].cover_path);
   revalidatePath('/organizador');
   redirect('/organizador');
 }

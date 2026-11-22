@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/app/components/site-header';
 import { requireOrganizer } from '@/lib/organizer';
 import { uuidPattern } from '@/lib/public-invitation';
+import { coverUrl } from '@/lib/supabase';
 import { updateEvent } from '../../actions';
 import { EventForm, LogoutForm } from '../../forms';
 
@@ -14,7 +15,7 @@ export default async function EditEventPage({ params }: PageProps<'/organizador/
   const { slug } = await params;
   if (!uuidPattern.test(slug)) notFound();
 
-  const { data: event, error } = await supabase.from('events').select('title, event_date, event_time, location').eq('slug', slug).maybeSingle();
+  const { data: event, error } = await supabase.from('events').select('title, event_date, event_time, location, accent_color, cover_path').eq('slug', slug).maybeSingle();
   if (error) throw new Error('Falha ao carregar o evento.', { cause: error });
   if (!event) notFound();
 
@@ -25,7 +26,7 @@ export default async function EditEventPage({ params }: PageProps<'/organizador/
         <Link className="back-link" href={`/organizador/${slug}`}><ArrowLeft size={16} aria-hidden="true" /> Voltar ao evento</Link>
         <h1>Editar <em>evento.</em></h1>
         <section className="surface new-event">
-          <EventForm action={updateEvent.bind(null, slug)} initial={event} label="Salvar alterações" pendingLabel="Salvando…" icon={<Save size={18} aria-hidden="true" />} />
+          <EventForm action={updateEvent.bind(null, slug)} initial={event} coverSrc={event.cover_path && coverUrl(event.cover_path)} label="Salvar alterações" pendingLabel="Salvando…" icon={<Save size={18} aria-hidden="true" />} />
         </section>
       </main>
     </>

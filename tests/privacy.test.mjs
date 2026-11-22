@@ -20,6 +20,7 @@ test('guests can RSVP once per submission and only the event owner can read the 
     const migration = new URL('../supabase/migrations/20261122000000_initial.sql', import.meta.url);
     await db.exec(await readFile(migration, 'utf8'));
     await db.exec(await readFile(new URL('../supabase/migrations/20261122000001_manage_events.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20261122000002_event_theme.sql', import.meta.url), 'utf8'));
 
     await db.exec(`set role authenticated; set test.user_id = '00000000-0000-0000-0000-000000000001';`);
     const { rows: [event] } = await db.query("insert into public.events (title) values ('Minha festa') returning slug");
@@ -28,7 +29,7 @@ test('guests can RSVP once per submission and only the event owner can read the 
     await assert.rejects(db.query('select * from public.events'), { code: '42501' });
     await assert.rejects(db.query('select * from public.rsvps'), { code: '42501' });
     const invitation = await db.query('select * from public.get_invitation($1)', [event.slug]);
-    assert.deepEqual(invitation.rows, [{ title: 'Minha festa', event_date: null, event_time: null, location: null }]);
+    assert.deepEqual(invitation.rows, [{ title: 'Minha festa', event_date: null, event_time: null, location: null, cover_path: null, accent_color: null }]);
 
     const submit = 'select public.confirm_attendance($1, $2, $3, $4)';
     const request = '00000000-0000-0000-0000-000000000003';
@@ -58,6 +59,35 @@ test('guests can RSVP once per submission and only the event owner can read the 
     assert.equal((await db.query('select title from public.events')).rows[0].title, 'Nova festa');
     assert.equal((await db.query('delete from public.events where slug = $1', [event.slug])).affectedRows, 1);
     assert.deepEqual((await db.query('select * from public.rsvps')).rows, []);
+  } finally {
+    await db.close();
+  }
+});
+
+test('event theme: only valid cover paths and colors, visible to guests through get_invitation', async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(`
+      create role anon; create role authenticated; create schema auth;
+      create table auth.users (id uuid primary key);
+      create function auth.uid() returns uuid language sql stable as
+        $$ select nullif(current_setting('test.user_id', true), '')::uuid $$;
+      grant usage on schema auth to authenticated;
+      insert into auth.users values ('00000000-0000-0000-0000-000000000001');
+    `);
+    for (const name of ['20261122000000_initial', '20261122000001_manage_events', '20261122000002_event_theme']) {
+      await db.exec(await readFile(new URL(`../supabase/migrations/${name}.sql`, import.meta.url), 'utf8'));
+    }
+    await db.exec(`set role authenticated; set test.user_id = '00000000-0000-0000-0000-000000000001';`);
+    const cover = '00000000-0000-0000-0000-000000000001/11111111-1111-1111-1111-111111111111.webp';
+    const { rows: [event] } = await db.query(
+      "insert into public.events (title, cover_path, accent_color) values ('Festa', $1, '#c2417f') returning slug", [cover]);
+    await assert.rejects(db.query("update public.events set accent_color = 'red' where slug = $1", [event.slug]), { code: '23514' });
+    await assert.rejects(db.query("update public.events set cover_path = '../outra/pasta.png' where slug = $1", [event.slug]), { code: '23514' });
+
+    await db.exec('set role anon');
+    const { rows } = await db.query('select cover_path, accent_color from public.get_invitation($1)', [event.slug]);
+    assert.deepEqual(rows, [{ cover_path: cover, accent_color: '#c2417f' }]);
   } finally {
     await db.close();
   }
