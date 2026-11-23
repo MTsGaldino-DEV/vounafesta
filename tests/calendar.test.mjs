@@ -18,6 +18,8 @@ test('ics escapes text, folds long lines and uses CRLF', () => {
   const ics = icsFile({ ...event, title: `${event.title} ${'x'.repeat(120)}` }, 'abc', 'https://site/convite/abc', new Date('2026-01-01T00:00:00Z'));
   assert.match(ics, /^BEGIN:VCALENDAR\r\n/);
   assert.match(ics, /DTSTART:20261231T223000\r\n/);
+  assert.match(ics, /BEGIN:VALARM\r\nACTION:DISPLAY\r\n/);
+  assert.match(ics, /TRIGGER:-P1D\r\nEND:VALARM\r\n/);
   assert.match(ics, /LOCATION:Rua A\\, 10\r\n/);
   assert.ok(ics.includes('SUMMARY:Festa\\, da Ana\\; 30 anos'));
   assert.ok(ics.split('\r\n').every((line) => line.length <= 51));

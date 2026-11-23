@@ -58,6 +58,8 @@ export function icsFile(invitation: CalendarInvitation, slug: string, inviteUrl:
     ...(invitation.location ? [`LOCATION:${escapeText(invitation.location)}`] : []),
     `DESCRIPTION:${escapeText(`Convite: ${inviteUrl}`)}`,
     `URL:${inviteUrl}`,
+    // Reminder one day before the event.
+    'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapeText(invitation.title)}`, 'TRIGGER:-P1D', 'END:VALARM',
     'END:VEVENT', 'END:VCALENDAR',
   ];
   return lines.map(fold).join('\r\n') + '\r\n';
