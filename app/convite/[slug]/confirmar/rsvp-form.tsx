@@ -3,16 +3,17 @@
 import { ArrowLeft, ArrowRight, CircleCheck, LockKeyhole, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useActionState, useRef, useState } from 'react';
+import { AddToCalendar, type CalendarLinks } from '@/app/components/add-to-calendar';
 import { maxCompanions, maxNameLength } from '@/lib/invitation';
 import { confirmAttendance } from './actions';
 
-export function RsvpForm({ slug, requestId, demo }: { slug: string; requestId: string; demo: boolean }) {
+export function RsvpForm({ slug, requestId, demo, calendar }: { slug: string; requestId: string; demo: boolean; calendar: CalendarLinks }) {
   const [state, submit, pending] = useActionState(confirmAttendance.bind(null, slug, requestId), {});
   const [name, setName] = useState('');
   const [companions, setCompanions] = useState<{ id: number; name: string }[]>([]);
   const nextId = useRef(0);
   const focusedId = useRef<number | null>(null);
-  const backHref = demo ? '/' : `/convite/${slug}`;
+  const backHref = `/convite/${slug}`;
 
   function addCompanion() {
     const id = nextId.current++;
@@ -27,6 +28,7 @@ export function RsvpForm({ slug, requestId, demo }: { slug: string; requestId: s
         <h1>Presença confirmada!</h1>
         <p>{demo ? 'Você concluiu o convite de exemplo. A resposta não foi salva.' : 'Tudo certo. A organização já recebeu a sua confirmação.'}</p>
         <Link className="button button-secondary" href={backHref}>Voltar ao convite</Link>
+        <AddToCalendar links={calendar} />
       </div>
     );
   }

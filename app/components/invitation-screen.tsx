@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { invitationSchedule, type Invitation } from '@/lib/invitation';
 import { coverUrl } from '@/lib/supabase';
 import defaultCover from '@/public/tema/moana.webp';
+import { AddToCalendar, type CalendarLinks } from './add-to-calendar';
 import { SiteHeader } from './site-header';
 
 export function InvitationScreen({ invitation, slug, demo = false, children }: {
@@ -50,7 +51,7 @@ export function InvitationScreen({ invitation, slug, demo = false, children }: {
   );
 }
 
-export function InvitationIntro({ demo = false, confirmHref }: { demo?: boolean; confirmHref: string }) {
+export function InvitationIntro({ demo = false, confirmHref, calendar = null }: { demo?: boolean; confirmHref: string; calendar?: CalendarLinks }) {
   return (
     <div className="invite-intro">
       <div className="invite-tag"><Sparkles size={15} aria-hidden="true" /> {demo ? 'Convite de exemplo' : 'Confirmação de presença'}</div>
@@ -59,6 +60,7 @@ export function InvitationIntro({ demo = false, confirmHref }: { demo?: boolean;
       <Link className="button button-primary invite-cta" href={confirmHref}>
         Confirmar presença <ArrowRight size={19} aria-hidden="true" />
       </Link>
+      <AddToCalendar links={calendar} />
       <p className="invite-note"><LockKeyhole size={15} aria-hidden="true" /> {demo ? 'Respostas de exemplo não são salvas.' : 'Só quem organiza vê os nomes enviados.'}</p>
     </div>
   );

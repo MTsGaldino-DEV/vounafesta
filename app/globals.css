@@ -259,3 +259,8 @@ h2 { font-size: 1.22rem; line-height: 1.28; letter-spacing: -.025em; }
   .landing-grid { grid-template-columns: minmax(0, 1fr); }
   .landing-actions .button { width: 100%; }
 }
+
+.add-to-calendar { display: grid; gap: 10px; margin-top: 22px; }
+.add-to-calendar p { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .84rem; font-weight: 700; }
+.add-to-calendar p svg { color: var(--accent); }
+.add-to-calendar .share-actions { flex-wrap: wrap; }
