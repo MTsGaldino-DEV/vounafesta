@@ -11,7 +11,7 @@ export default async function ConfirmPage({ params }: PageProps<'/convite/[slug]
   const invitation = await getInvitation(slug);
   const demo = slug === demoSlug;
   return (
-    <InvitationScreen invitation={invitation} demo={demo}>
+    <InvitationScreen invitation={invitation} slug={slug} demo={demo}>
       <RsvpForm slug={slug} requestId={randomUUID()} demo={demo} />
     </InvitationScreen>
   );

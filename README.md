@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Abra `http://localhost:3000`. A página inicial tem um convite de exemplo que pode ser preenchido sem configurar o banco. As respostas do exemplo não são salvas.
+Abra `http://localhost:3000`. A página inicial apresenta o serviço; o convite de exemplo, que pode ser preenchido sem configurar o banco, fica em `/convite/exemplo`. As respostas do exemplo não são salvas.
 
 ## Conectar o Supabase
 

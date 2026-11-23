@@ -6,8 +6,9 @@ import { coverUrl } from '@/lib/supabase';
 import defaultCover from '@/public/tema/moana.webp';
 import { SiteHeader } from './site-header';
 
-export function InvitationScreen({ invitation, demo = false, children }: {
+export function InvitationScreen({ invitation, slug, demo = false, children }: {
   invitation: Invitation;
+  slug: string;
   demo?: boolean;
   children: React.ReactNode;
 }) {
@@ -21,7 +22,8 @@ export function InvitationScreen({ invitation, demo = false, children }: {
   } as React.CSSProperties : undefined;
   return (
     <div className="invite-page" style={theme}>
-      <SiteHeader />
+      {/* The logo stays inside the invitation so guests never land on the marketing page. */}
+      <SiteHeader homeHref={`/convite/${slug}`} />
       <main className="invite-layout">
         <section className="invite-cover" aria-label="Sobre o evento">
           {invitation.cover_path

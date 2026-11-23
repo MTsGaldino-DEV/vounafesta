@@ -8,7 +8,7 @@ export default async function InvitationPage({ params }: PageProps<'/convite/[sl
   const { slug } = await params;
   const invitation = await getInvitation(slug);
   return (
-    <InvitationScreen invitation={invitation} demo={slug === demoSlug}>
+    <InvitationScreen invitation={invitation} slug={slug} demo={slug === demoSlug}>
       <InvitationIntro demo={slug === demoSlug} confirmHref={`/convite/${slug}/confirmar`} />
     </InvitationScreen>
   );
